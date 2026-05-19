@@ -1,0 +1,12 @@
+{
+  "name": "one-estate-coffee",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["client", "server", "db"],
+  "scripts": {
+    "dev:client": "npm run dev --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "migrate": "npm run migrate --workspace=db",
+    "install:all": "npm install"
+  }
+}
