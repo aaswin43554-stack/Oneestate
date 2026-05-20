@@ -40,8 +40,7 @@ async function migrate() {
     console.log('[migrate] all migrations up to date');
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
-    console.error('[migrate] FAILED:', err.message);
-    process.exit(1);
+    console.error('[migrate] FAILED (server will still start):', err.message);
   } finally {
     client.release();
   }
