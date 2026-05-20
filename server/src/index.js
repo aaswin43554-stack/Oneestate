@@ -50,6 +50,11 @@ setupRoastWebSocket(server);
 
 server.listen(PORT, async () => {
   console.log(`[server] listening on http://localhost:${PORT}`);
+  if (!process.env.DATABASE_URL) {
+    console.error('[server] ERROR: DATABASE_URL is not set — database features will not work.');
+    console.error('[server] Set DATABASE_URL in your Render environment variables.');
+    return;
+  }
   await migrate();
   await seed();
 });
