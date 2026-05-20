@@ -1,19 +1,17 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
-// Global safety net — prevent any unhandled rejection from crashing Node 15+
+// Prevent ANY unhandled error from crashing the server
 process.on('unhandledRejection', (reason) => {
-  console.error('[server] Unhandled promise rejection (non-fatal):', reason);
+  console.error('[server] unhandledRejection:', reason?.message || reason);
 });
 process.on('uncaughtException', (err) => {
-  console.error('[server] Uncaught exception (non-fatal):', err.message);
+  console.error('[server] uncaughtException:', err.message);
 });
 
 const http    = require('http');
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
-const migrate = require('./scripts/migrate');
-const seed    = require('./scripts/seed');
 
 const authRoutes          = require('./routes/auth');
 const lotsRoutes          = require('./routes/lots');
@@ -27,12 +25,16 @@ const { setupRoastWebSocket } = require('./services/roastHardwareMock');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
-const allowedOrigin = process.env.CLIENT_URL || (process.env.NODE_ENV === 'production' ? true : 'http://localhost:5173');
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+// Allow all origins in production (frontend is same-origin anyway)
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? true : (process.env.CLIENT_URL || 'http://localhost:5173'),
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 
+// Health check — always responds, no DB required
 app.get('/api/health', (_req, res) =>
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), db: !!process.env.DATABASE_URL })
 );
 
 app.use('/api/auth',             authRoutes);
@@ -45,25 +47,20 @@ app.use('/api/labels',           labelRoutes);
 
 // Global error handler
 app.use((err, _req, res, _next) => {
-  console.error(err.stack);
+  console.error('[server] express error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Serve frontend static files in production
+// Serve built frontend in production
 const clientDistPath = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientDistPath));
 app.get('*', (_req, res) => res.sendFile(path.join(clientDistPath, 'index.html')));
 
-// Create HTTP server and attach WebSocket
 const server = http.createServer(app);
 setupRoastWebSocket(server);
 
-server.listen(PORT, async () => {
-  console.log(`[server] listening on http://localhost:${PORT}`);
-  if (!process.env.DATABASE_URL) {
-    console.error('[server] ERROR: DATABASE_URL is not set — set it in Render environment variables.');
-    return;
-  }
-  try { await migrate(); } catch (e) { console.error('[server] migrate error:', e.message); }
-  try { await seed();    } catch (e) { console.error('[server] seed error:',    e.message); }
+server.listen(PORT, () => {
+  console.log(`[server] listening on port ${PORT}`);
+  console.log(`[server] DATABASE_URL: ${process.env.DATABASE_URL ? 'SET ✓' : 'NOT SET ✗'}`);
+  console.log(`[server] NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 });

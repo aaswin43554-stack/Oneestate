@@ -1,18 +1,26 @@
-require('dotenv').config({ path: '../.env' });
-const { Pool } = require('pg');
-const fs = require('fs');
+// Load .env only if it exists (local dev). On Render, env vars are set directly.
+const fs   = require('fs');
 const path = require('path');
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) require('dotenv').config({ path: envPath });
+
+const { Pool } = require('pg');
 
 if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL is not set. Copy .env.example → .env and fill in the values.');
-  process.exit(1);
+  console.warn('[migrate] DATABASE_URL not set — skipping migrations.');
+  process.exit(0);
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 
 async function migrate() {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version    VARCHAR(255) PRIMARY KEY,
@@ -28,13 +36,9 @@ async function migrate() {
     for (const file of files) {
       const version = file.replace('.sql', '');
       const { rows } = await client.query(
-        'SELECT 1 FROM schema_migrations WHERE version = $1',
-        [version]
+        'SELECT 1 FROM schema_migrations WHERE version = $1', [version]
       );
-      if (rows.length > 0) {
-        console.log(`  skip  ${file}`);
-        continue;
-      }
+      if (rows.length > 0) { console.log(`  skip  ${file}`); continue; }
 
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
       console.log(`  apply ${file} ...`);
@@ -47,11 +51,11 @@ async function migrate() {
 
     console.log('\nAll migrations applied successfully.');
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('\nMigration failed:', err.message);
     process.exit(1);
   } finally {
-    client.release();
+    if (client) client.release();
     await pool.end();
   }
 }
