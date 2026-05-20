@@ -14,7 +14,9 @@
       "Read(//c/Users/aaswi/OneDrive/Desktop/Work/Oneestate/server/**)",
       "Bash(node src/index.js)",
       "Bash(echo \"Server PID: $!\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(powershell *)",
+      "Bash(ping -n 5 127.0.0.1)"
     ]
   }
 }

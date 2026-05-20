@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import NavBar from '../components/NavBar';
+import Layout from '../components/Layout';
 import AddLotModal from '../components/AddLotModal';
 
 const PROCESSES = ['Washed', 'Honey', 'Natural', 'Anaerobic'];
@@ -60,9 +60,7 @@ export default function Inventory() {
   const processOrder = PROCESSES.filter((p) => grouped[p]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
-
+    <Layout>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Page header */}
@@ -194,6 +192,6 @@ export default function Inventory() {
           onCreated={() => { setShowModal(false); fetchLots(); }}
         />
       )}
-    </div>
+    </Layout>
   );
 }

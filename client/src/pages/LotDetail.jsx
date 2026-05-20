@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import NavBar from '../components/NavBar';
+import Layout from '../components/Layout';
 import YieldCalculator from '../components/YieldCalculator';
 
 function gToKg(g) { return (g / 1000).toFixed(2); }
@@ -88,31 +88,27 @@ export default function LotDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <NavBar />
+      <Layout>
         <div className="text-center py-24 text-coffee-300 text-sm">Loading…</div>
-      </div>
+      </Layout>
     );
   }
 
   if (error || !lot) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <NavBar />
+      <Layout>
         <div className="text-center py-24">
           <p className="text-red-500 text-sm">{error || 'Lot not found.'}</p>
           <button onClick={() => navigate('/inventory')} className="mt-3 text-coffee-600 underline text-sm">
             Back to inventory
           </button>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
-
+    <Layout>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Breadcrumb + header */}
@@ -284,6 +280,6 @@ export default function LotDetail() {
           )}
         </div>
       </main>
-    </div>
+    </Layout>
   );
 }

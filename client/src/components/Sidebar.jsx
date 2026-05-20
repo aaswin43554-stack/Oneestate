@@ -3,6 +3,7 @@ import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
 
 const NAV = [
+  { to: '/',            label: 'Dashboard' },
   { to: '/inventory',   label: 'Inventory' },
   { to: '/allocations', label: 'Allocations' },
   { to: '/roast',       label: 'Roast Sessions' },

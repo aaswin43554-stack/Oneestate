@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './lib/auth';
 
 // Existing pages
 import Login     from './pages/Login';
+import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import LotDetail from './pages/LotDetail';
 
@@ -50,6 +51,10 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
+          {/* Dashboard */}
+          <Route path="/"          element={<P element={<Dashboard />} />} />
+          <Route path="/dashboard" element={<P element={<Dashboard />} />} />
+
           {/* Inventory (existing) */}
           <Route path="/inventory"    element={<P element={<Inventory />} />} />
           <Route path="/inventory/:id" element={<P element={<LotDetail />} />} />
@@ -81,7 +86,7 @@ export default function App() {
           {/* Labels */}
           <Route path="/labels/:allocation_id" element={<P element={<LabelPreview />} />} />
 
-          <Route path="*" element={<Navigate to="/inventory" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
