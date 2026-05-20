@@ -1,4 +1,13 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
+
+// Global safety net — prevent any unhandled rejection from crashing Node 15+
+process.on('unhandledRejection', (reason) => {
+  console.error('[server] Unhandled promise rejection (non-fatal):', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[server] Uncaught exception (non-fatal):', err.message);
+});
+
 const http    = require('http');
 const express = require('express');
 const cors    = require('cors');
@@ -18,7 +27,8 @@ const { setupRoastWebSocket } = require('./services/roastHardwareMock');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+const allowedOrigin = process.env.CLIENT_URL || (process.env.NODE_ENV === 'production' ? true : 'http://localhost:5173');
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/api/health', (_req, res) =>
