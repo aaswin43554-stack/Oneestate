@@ -1,6 +1,6 @@
 /**
  * Runs pending SQL migrations from db/migrations on server startup.
- * Idempotent — skips already-applied migrations.
+ * Idempotent — skips already-applied migrations. Non-fatal on error.
  */
 const fs   = require('fs');
 const path = require('path');
@@ -9,8 +9,10 @@ const pool = require('../config/db');
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../../db/migrations');
 
 async function migrate() {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version    VARCHAR(255) PRIMARY KEY,
@@ -39,10 +41,10 @@ async function migrate() {
     }
     console.log('[migrate] all migrations up to date');
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('[migrate] FAILED (server will still start):', err.message);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 

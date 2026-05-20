@@ -12,22 +12,24 @@ const TENANT_NAME   = 'One Estate Coffee';
 const TENANT_SLUG   = 'one-estate';
 
 async function seed() {
-  const client = await pool.connect();
+  let client;
   try {
-    // Check if demo user already exists (across any tenant)
+    client = await pool.connect();
+
     const { rows: existing } = await client.query(
       'SELECT id FROM oec_users WHERE email = $1',
       [DEMO_EMAIL]
     );
-    if (existing.length > 0) return; // already seeded
+    if (existing.length > 0) {
+      console.log('[seed] Demo account already exists — skipping.');
+      return;
+    }
 
     await client.query('BEGIN');
 
-    // Upsert tenant (slug might already be taken)
     let tenantId;
     const { rows: tenants } = await client.query(
-      'SELECT id FROM oec_tenants WHERE slug = $1',
-      [TENANT_SLUG]
+      'SELECT id FROM oec_tenants WHERE slug = $1', [TENANT_SLUG]
     );
     if (tenants.length > 0) {
       tenantId = tenants[0].id;
@@ -39,12 +41,10 @@ async function seed() {
       tenantId = t.id;
     }
 
-    // Create admin user
     const hash = await bcrypt.hash(DEMO_PASSWORD, 12);
     const { rows: [user] } = await client.query(
       `INSERT INTO oec_users (tenant_id, name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4, 'admin')
-       RETURNING id`,
+       VALUES ($1, $2, $3, $4, 'admin') RETURNING id`,
       [tenantId, DEMO_NAME, DEMO_EMAIL, hash]
     );
     await client.query(
@@ -55,10 +55,10 @@ async function seed() {
     await client.query('COMMIT');
     console.log('[seed] Demo account created: admin@oneestate.com / Admin123!');
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('[seed] Seed failed (non-fatal):', err.message);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 
