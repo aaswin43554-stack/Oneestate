@@ -3,6 +3,8 @@ const http    = require('http');
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
+const migrate = require('./scripts/migrate');
+const seed    = require('./scripts/seed');
 
 const authRoutes          = require('./routes/auth');
 const lotsRoutes          = require('./routes/lots');
@@ -46,6 +48,8 @@ app.get('*', (_req, res) => res.sendFile(path.join(clientDistPath, 'index.html')
 const server = http.createServer(app);
 setupRoastWebSocket(server);
 
-server.listen(PORT, () =>
-  console.log(`[server] listening on http://localhost:${PORT}`)
-);
+server.listen(PORT, async () => {
+  console.log(`[server] listening on http://localhost:${PORT}`);
+  await migrate();
+  await seed();
+});
