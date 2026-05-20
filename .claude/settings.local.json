@@ -11,7 +11,10 @@
       "Bash(node --check src/routes/allocations.js)",
       "Bash(node --check src/routes/profiles.js)",
       "Bash(node --check src/routes/cupping.js)",
-      "Read(//c/Users/aaswi/OneDrive/Desktop/Work/Oneestate/server/**)"
+      "Read(//c/Users/aaswi/OneDrive/Desktop/Work/Oneestate/server/**)",
+      "Bash(node src/index.js)",
+      "Bash(echo \"Server PID: $!\")",
+      "Bash(node *)"
     ]
   }
 }
