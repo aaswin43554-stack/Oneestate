@@ -34,6 +34,16 @@ import CuppingCompare from './pages/cupping/CuppingCompare';
 // Label pages
 import LabelPreview from './pages/labels/LabelPreview';
 
+// Journal pages
+import JournalDashboard from './pages/journal/JournalDashboard';
+import JournalEntry     from './pages/journal/JournalEntry';
+
+// Contact pages
+import ContactList        from './pages/contacts/ContactList';
+import ContactForm        from './pages/contacts/ContactForm';
+import ContactDetail      from './pages/contacts/ContactDetail';
+import ContactPrivateList from './pages/contacts/ContactPrivateList';
+
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
@@ -85,6 +95,17 @@ export default function App() {
 
           {/* Labels */}
           <Route path="/labels/:allocation_id" element={<P element={<LabelPreview />} />} />
+
+          {/* Journal */}
+          <Route path="/journal"                          element={<P element={<JournalDashboard />} />} />
+          <Route path="/journal/:allocation_id/:type"     element={<P element={<JournalEntry />} />} />
+
+          {/* Contacts */}
+          <Route path="/contacts"                   element={<P element={<ContactList />} />} />
+          <Route path="/contacts/new"               element={<P element={<ContactForm />} />} />
+          <Route path="/contacts/private-list"      element={<P element={<ContactPrivateList />} />} />
+          <Route path="/contacts/:id"               element={<P element={<ContactDetail />} />} />
+          <Route path="/contacts/:id/edit"          element={<P element={<ContactForm />} />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

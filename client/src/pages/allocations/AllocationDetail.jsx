@@ -6,6 +6,19 @@ import { useAuth } from '../../lib/auth';
 
 const TZ = 'Asia/Vientiane';
 
+const JOURNAL_DOC_TYPES = ['field_notes', 'roast_log', 'cupping_record', 'allocation_record'];
+const JOURNAL_DOC_LABELS = {
+  field_notes: 'Field Notes', roast_log: 'Roast Log',
+  cupping_record: 'Cupping Record', allocation_record: 'Allocation Record',
+};
+const JOURNAL_STATUS_STYLES = {
+  draft: 'bg-gray-100 text-gray-600', under_review: 'bg-amber-100 text-amber-700',
+  published: 'bg-green-100 text-green-700', missing: 'border border-red-300 text-red-600',
+};
+const JOURNAL_STATUS_LABELS = {
+  draft: 'Draft', under_review: 'Under Review', published: 'Published', missing: 'Missing',
+};
+
 const STATE_LABELS = {
   upcoming:'Upcoming', open_for_requests:'Open for Requests', closed:'Closed',
   roasting_in_progress:'Roasting', resting:'Resting', dispatched:'Dispatched', archived:'Archived',
@@ -49,6 +62,9 @@ export default function AllocationDetail() {
   const [reqSaving, setReqSaving] = useState(false);
   const [reqError,  setReqError]  = useState('');
   const [rowErrors, setRowErrors] = useState({});
+  const [journalDocs,       setJournalDocs]       = useState(null);
+  const [journalLoading,    setJournalLoading]    = useState(false);
+  const [journalGenerating, setJournalGenerating] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -59,6 +75,24 @@ export default function AllocationDetail() {
   }, [id]);
 
   useEffect(load, [load]);
+
+  const loadJournal = useCallback(() => {
+    setJournalLoading(true);
+    api.get(`/journal/${id}`)
+      .then(r => r.json())
+      .then(d => setJournalDocs(d.documents || null))
+      .catch(() => setJournalDocs(null))
+      .finally(() => setJournalLoading(false));
+  }, [id]);
+
+  useEffect(loadJournal, [loadJournal]);
+
+  async function generateJournalDrafts() {
+    setJournalGenerating(true);
+    await api.post(`/journal/generate/${id}`, {});
+    setJournalGenerating(false);
+    loadJournal();
+  }
 
   async function openTransitionModal() {
     const res = await api.get(`/allocations/${id}/transition-check`);
@@ -326,6 +360,52 @@ export default function AllocationDetail() {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        {/* Journal Entries */}
+        <div className="bg-white border border-coffee-200 rounded-lg p-4">
+          <h2 className="text-sm font-semibold text-coffee-800 mb-3">Journal Entries</h2>
+          {journalLoading ? (
+            <p className="text-sm text-coffee-400">Loading…</p>
+          ) : (
+            <>
+              {JOURNAL_DOC_TYPES.map(t => {
+                const doc = journalDocs?.[t];
+                const status = doc?.status || 'missing';
+                return (
+                  <div key={t} className="flex items-center justify-between py-2 border-b border-coffee-50 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-coffee-700">{JOURNAL_DOC_LABELS[t]}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${JOURNAL_STATUS_STYLES[status]}`}>
+                        {JOURNAL_STATUS_LABELS[status]}
+                      </span>
+                    </div>
+                    {doc?.id ? (
+                      <Link
+                        to={`/journal/${id}/${t}`}
+                        className="text-xs px-2 py-1 border border-coffee-300 text-coffee-700 rounded hover:bg-coffee-50"
+                      >
+                        Open
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-coffee-300">—</span>
+                    )}
+                  </div>
+                );
+              })}
+              {JOURNAL_DOC_TYPES.every(t => !journalDocs?.[t]?.id) && (
+                <div className="mt-3">
+                  <button
+                    onClick={generateJournalDrafts}
+                    disabled={journalGenerating}
+                    className="px-3 py-1.5 bg-coffee-700 text-white rounded text-xs font-semibold hover:bg-coffee-800 disabled:opacity-50"
+                  >
+                    {journalGenerating ? 'Generating…' : 'Generate journal drafts'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

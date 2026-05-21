@@ -3,12 +3,15 @@ import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
 
 const NAV = [
-  { to: '/',            label: 'Dashboard' },
-  { to: '/inventory',   label: 'Inventory' },
-  { to: '/allocations', label: 'Allocations' },
-  { to: '/roast',       label: 'Roast Sessions' },
-  { to: '/profiles',    label: 'Profiles' },
-  { to: '/cupping',     label: 'Cupping' },
+  { to: '/',                        label: 'Dashboard' },
+  { to: '/inventory',               label: 'Inventory' },
+  { to: '/allocations',             label: 'Allocations' },
+  { to: '/journal',                 label: 'Journal' },
+  { to: '/contacts',                label: 'Contacts' },
+  { to: '/contacts/private-list',   label: 'Private List' },
+  { to: '/roast',                   label: 'Roast Sessions' },
+  { to: '/profiles',                label: 'Profiles' },
+  { to: '/cupping',                 label: 'Cupping' },
 ];
 
 export default function Sidebar({ open, onClose }) {
